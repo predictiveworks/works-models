@@ -1,0 +1,140 @@
+author: Dr. Stefan Krusche
+description: Edge definitions
+edges:
+  # DHCP -> IP_ADDRESS
+  - src: DHCP
+    dst: IP_ADDRESS
+    label: assigned_ip
+  # DHCP -> MAC_ADDRESS
+  - src: DHCP
+    dst: MAC_ADDRESS
+    label: has_mac
+  # DNS -> DOMAIN
+  - src: DNS
+    dst: DOMAIN
+    label: dns_query
+  # DNS -> IP_ADDRESS
+  - src: DNS
+    dst: IP_ADDRESS
+    label: dns_answers
+  # FILE_TRANSFER -> FILE
+  - src: FILE_TRANSFER
+    dst: FILE
+    label: has_file
+  # FILE_TRANSFER -> NETWORK_CONN
+  - src: FILE_TRANSFER
+    dst: NETWORK_CONN
+    label: ssl_cert_chain_fuid
+  # FILE_TRANSFER -> NETWORK_CONN
+  - src: FILE_TRANSFER
+    dst: NETWORK_CONN
+    label: ssl_client_cert_chain_fuid
+  # FILE_TRANSFER -> X509
+  - src: FILE_TRANSFER
+    dst: X509
+    label: is_certificate
+  # FTP -> FILE_TRANSFER
+  - src: FTP
+    dst: FILE_TRANSFER
+    label: transfer_file
+  # HTTP -> DOMAIN
+  - src: HTTP
+    dst: DOMAIN
+    label: has_host
+  # HTTP -> URI
+  - src: HTTP
+    dst: URI
+    label: has_uri
+  # HTTP -> FILE_TRANSFER
+  - src: HTTP
+    dst: FILE_TRANSFER
+    label: transfer_file
+  # NETWORK_CONN -> DCERPC
+  - src: NETWORK_CONN
+    dst: DCERPC
+    label: is_dcerpc
+  # NETWORK_CONN -> DESTINATION_PORT
+  - src: NETWORK_CONN
+    dst: DESTINATION_PORT
+    label: has_dst_port
+  # NETWORK_CONN -> DHCP
+  - src: NETWORK_CONN
+    dst: DHCP
+    label: is_dhcp
+  # NETWORK_CONN -> DNS
+  - src: NETWORK_CONN
+    dst: DNS
+    label: is_dns
+  # NETWORK_CONN -> FILE_TRANSFER
+  - src: NETWORK_CONN
+    dst: FILE_TRANSFER
+    label: is_file_transfer
+  # NETWORK_CONN -> FTP
+  - src: NETWORK_CONN
+    dst: FTP
+    label: is_ftp
+  # NETWORK_CONN -> HTTP
+  - src: NETWORK_CONN
+    dst: HTTP
+    label: is_http
+  # NETWORK_CONN -> IP_ADDRESS
+  - src: NETWORK_CONN
+    dst: IP_ADDRESS
+    label: has_src_address
+  # NETWORK_CONN -> IP_ADDRESS
+  - src: NETWORK_CONN
+    dst: IP_ADDRESS
+    label: has_dst_address
+  # NETWORK_CONN -> KERBEROS
+  - src: NETWORK_CONN
+    dst: KERBEROS
+    label: is_kerberos
+  # NETWORK_CONN -> SNMP
+  - src: NETWORK_CONN
+    dst: SNMP
+    label: is_snmp
+  # NETWORK_CONN -> SSH
+  - src: NETWORK_CONN
+    dst: SSH
+    label: is_ssh
+  # NETWORK_CONN -> SSL
+  - src: NETWORK_CONN
+    dst: SSL
+    label: is_ssl
+  # NETWORK_CONN -> SYSLOG
+  - src: NETWORK_CONN
+    dst: SYS_LOG
+    label: is_syslog
+  # NETWORK_CONN -> WEIRD
+  - src: NETWORK_CONN
+    dst: WEIRD
+    label: is_weird
+  # SMTP -> MAIL
+  - src: SMTP
+    dst: MAIL
+    label: mail_from
+  - src: SMTP
+    dst: MAIL
+    label: mail_to
+  - src: SMTP
+    dst: MAIL
+    label: reply_to
+  - src: SMTP
+    dst: MAIL
+    label: receipt_to
+  # SMTP -> IP_ADDRESS
+  - src: SMTP
+    dst: IP_ADDRESS
+    label: x_originating_ip
+  # SMTP -> DOMAIN
+  - src: SMTP
+    dst: DOMAIN
+    label: helo
+  # SMTP -> FILE_TRANSFER
+  - src: SMTP
+    dst: FILE_TRANSFER
+    label: smtp_file
+  # SSL -> DOMAIN
+  - src: SSL
+    dst: DOMAIN
+    label: has_ssl_server
