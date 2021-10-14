@@ -6,8 +6,9 @@ object File extends Yaml {
     """
       |author: Dr. Stefan Krusche
       |comment:
-      |node: File
       |table: File
+      |node: File
+      |entities: File, Directory, User, Group, Device
       |#
       |# Node properties of the 'File' node
       |#
@@ -54,8 +55,6 @@ object File extends Yaml {
       |    node:
       |      name: Device
       |      value: device
-      |
-      |
       |""".stripMargin
 
   def main(args:Array[String]):Unit = {
