@@ -18,69 +18,49 @@ package de.kp.works.models.osquery.mapping
  *
  */
 
-object File extends Yaml {
+object User extends Yaml {
   /*
-   * The Osquery table `file` delivers the main content
-   * to the file based graph. Other file related tables
-   * like `authenticode` exist, but this implementation
-   * does not take these more detailed data into account.
+   * Osquery specifies a `user_groups` table, which contains
+   * a user's `uid` and the associated group's `gid`.
+   *
+   * Note, this table can be ignored with respect to the
+   * Osquery network defined here, as this information is
+   * redundant.
    */
-  val spec: String =
+  val spec:String =
     """
       |author: Dr. Stefan Krusche
       |comment:
-      |table: File
-      |node: File
-      |entities: File, Directory, User, Group, Device
+      |table: users
+      |node: User
+      |entities: User, Directory, Group
       |#
-      |# Node properties of the 'File' node
+      |# Node properties of the 'User' node
       |#
       |properties:
-      |  - filename
-      |  - path
-      |  - inode
-      |  - mode
-      |  - size
-      |  - block_size
-      |  - atime
-      |  - mtime
-      |  - ctime
-      |  - btime
-      |  - hard_links
-      |  - symlink
+      |  - uid
+      |  - uid_signed
+      |  - username
+      |  - description
+      |  - uuid
       |  - type
-      |  - attributes
-      |  - volume_serial
-      |  - file_id
-      |  - product_version
-      |  - bsd_flags
-      |  - pid_with_namespace
-      |  - mount_namespace_id
+      |  - shell
+      |  - is_hidden
       |edges:
       |  - direction: out
-      |    # Directory of file(s)
       |    label: directory
       |    node:
       |      name: Directory
       |      value: directory
-      |  - direction: out
-      |    label: uid
-      |    node:
-      |      name: User
-      |      value: uid
       |  - direction: out
       |    label: gid
       |    node:
       |      name: Group
       |      value: gid
       |  - direction: out
-      |    label: device
+      |    label: gid_signed
       |    node:
-      |      name: Device
-      |      value: device
+      |      name: Group
+      |      value: gid_signed
       |""".stripMargin
-
-  def main(args:Array[String]):Unit = {
-    println(fromStr(spec))
-  }
 }

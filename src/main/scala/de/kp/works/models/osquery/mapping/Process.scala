@@ -55,7 +55,6 @@ object Process extends Yaml {
       |  # Not used
       |  - upid
       |  - uppid
-      |
       |edges:
       |  - direction: out
       |    label: cwd
