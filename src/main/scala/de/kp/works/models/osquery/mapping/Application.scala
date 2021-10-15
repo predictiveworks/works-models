@@ -18,6 +18,8 @@ package de.kp.works.models.osquery.mapping
  *
  */
 
+import de.kp.works.models.Yaml
+
 object Application extends Yaml {
   /*
    * The Osquery table `background_activities_moderator`

@@ -18,6 +18,8 @@ package de.kp.works.models.osquery.mapping
  *
  */
 
+import de.kp.works.models.Yaml
+
 class SDB extends Yaml {
   /*
    * The Osquery table `appcompat_shims` describes shimed

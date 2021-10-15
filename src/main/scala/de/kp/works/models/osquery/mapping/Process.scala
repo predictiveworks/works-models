@@ -1,4 +1,7 @@
 package de.kp.works.models.osquery.mapping
+
+import de.kp.works.models.Yaml
+
 /*
  * Copyright (c) 2019 - 2021 Dr. Krusche & Partner PartG. All rights reserved.
  *
@@ -19,7 +22,11 @@ package de.kp.works.models.osquery.mapping
  */
 
 object Process extends Yaml {
-
+  /*
+   * The Osquery table `processes` lists all running processing
+   * on the host machine. It offers an important information
+   * summary in relation with other tables.
+   */
   val spec: String =
     """
       |author: Dr. Stefan Krusche

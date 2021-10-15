@@ -1,4 +1,7 @@
 package de.kp.works.models.osquery.mapping
+
+import de.kp.works.models.Yaml
+
 /*
  * Copyright (c) 2019 - 2021 Dr. Krusche & Partner PartG. All rights reserved.
  *

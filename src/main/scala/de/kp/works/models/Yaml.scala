@@ -1,4 +1,4 @@
-package de.kp.works.models.osquery.mapping
+package de.kp.works.models
 /*
  * Copyright (c) 2019 - 2021 Dr. Krusche & Partner PartG. All rights reserved.
  *
@@ -27,7 +27,7 @@ import java.nio.file.{Files, Paths}
 
 trait Yaml {
 
-  def fromUri(uri:URI):JsonObject = {
+  def fromUri(uri: URI): JsonObject = {
     /*
      * Read YAML file from URI and convert
      * convent into a Java Object
@@ -37,7 +37,7 @@ trait Yaml {
 
   }
 
-  def fromStr(content:String):JsonObject = {
+  def fromStr(content: String): JsonObject = {
 
     val reader = new ObjectMapper(new YAMLFactory())
     val obj = reader.readValue(content, classOf[Object])
