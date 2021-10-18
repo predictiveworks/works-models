@@ -33,24 +33,28 @@ object Process extends Yaml {
       |comment: This node can be associated to STIX v2 Cyber observable 'Process Object'
       |table: processes
       |node: Process
+      |label: name
       |entities: Process, Directory, File, User, Group
       |#
       |# Node properties of the 'Process' node
       |#
       |properties:
+      |    # Process or thread ID
       |  - pid
-      |  - name
       |  - cmdline
       |  - state
+      |    # Disk related
       |  - on_disk
-      |  - wired_size
-      |  - resident_size
-      |  - total_size
-      |  - user_time
-      |  - system_time
       |  - disk_bytes_read
       |  - disk_bytes_written
+      |    # Memory related
+      |  - resident_size
+      |  - total_size
+      |  - wired_size
+      |    # Time related
       |  - start_time
+      |  - system_time
+      |  - user_time
       |  - threads
       |  - nice
       |  - is_elevated_token
@@ -68,12 +72,17 @@ object Process extends Yaml {
       |    node:
       |      name: Directory
       |      value: cwd
-      |  - direction: out
-      |    # Path to executed binary (file)
-      |    label: path
+      |  - direction: in
+      |    #
+      |    # The process is controlled
+      |    # by an executed binary file
+      |    #
+      |    label: ENUM_executes
       |    node:
       |      name: File
-      |      value: path
+      |      label: path
+      |      properties:
+      |        - type: ENUM_binary
       |  - direction: out
       |    # Process virtual root directory
       |    label: root
@@ -91,6 +100,10 @@ object Process extends Yaml {
       |      name: Group
       |      value: pgroup
       |  - direction: out
+      |    #
+      |    # The connection to the currently logged in user
+      |    # is made via the pid
+      |    #
       |    label: uid
       |    node:
       |      name: User

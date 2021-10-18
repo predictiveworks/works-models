@@ -1,7 +1,4 @@
 package de.kp.works.models.osquery.mapping
-
-import de.kp.works.models.Yaml
-
 /*
  * Copyright (c) 2019 - 2021 Dr. Krusche & Partner PartG. All rights reserved.
  *
@@ -21,37 +18,54 @@ import de.kp.works.models.Yaml
  *
  */
 
-object Hash extends Yaml {
+import de.kp.works.models.Yaml
+
+class Service extends Yaml {
 
   val spec:String =
     """
       |author: Dr. Stefan Krusche
       |comment:
-      |table: hash
-      |node: Hash
-      |entities: Hash, Directory, File
+      |table: services
+      |node: Service
+      |entities: Service, File, Process, Account
       |#
-      |# Node properties of the 'Hash' node
+      |# Node properties of the 'Service' node
       |#
       |properties:
-      |  - md5
-      |  - sha1
-      |  - sha256
-      |  - ssdeep
-      |  - pid_with_namespace
-      |  - mount_namespace_id
+      |  - name
+      |  - description
+      |  - service_type
+      |  - display_name
+      |  - status
+      |  - start_type
+      |  - win32_exit_code
+      |  - service_exit_code
       |edges:
       |  - direction: out
-      |    # Directory of the associated file
-      |    label: directory
+      |    # Process ID of the service
+      |    label: pid
       |    node:
-      |      name: Directory
-      |      value: directory
+      |      name: Process
+      |      value: pid
       |  - direction: out
+      |    # Path to service executable
       |    label: path
       |    node:
       |      name: File
       |      value: path
+      |  - direction: out
+      |    # Path to service *.dll
+      |    label: module_path
+      |    node:
+      |      name: File
+      |      value: module_path
+      |  - direction: out
+      |    # The name of the account that the service process
+      |    # will be logged on as when it runs.
+      |    label: user_account
+      |    node:
+      |      name: Account
+      |      value: user_account
       |""".stripMargin
 }
-

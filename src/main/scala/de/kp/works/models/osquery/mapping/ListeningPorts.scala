@@ -20,38 +20,36 @@ package de.kp.works.models.osquery.mapping
 
 import de.kp.works.models.Yaml
 
-object ProcessSocket extends Yaml {
+object ListeningPorts extends Yaml {
   /*
-   * The Osquery table `process_open_sockets` assigns
-   * open network sockets to running processes.
+   * The Osquery table `listening_ports` describes
+   * processes with listening (bound) network sockets
+   * or ports.
    *
-   * Combined with Zeek's conn.log, this is of great
-   * benefit to understand the origin or destination
-   * of network connection in terms executable files.
+   * Note: this table is similar to `process_open_sockets`
    */
   val spec:String =
     """
       |author: Dr. Stefan Krusche
       |comment:
-      |table: process_open_sockets
-      |node: ProcessSocket
-      |entities: ProcessSocket, Process, Protocol, Port, IP_Address
+      |table: listening_ports
+      |node: ListeningPort
+      |entities: ListeningPort
       |#
-      |# Node properties of the 'ProcessSocket' node
+      |# Node properties of the 'ListeningPorts' node
       |#
       |properties:
       |    # The file descriptor number
       |  - fd
       |    # Ths socket handle or inode number
       |  - socket
-      |  - state
       |    # The inode number of the network namespace
       |  - net_namespace
       |    # For UNIX sockets (family=AF_UNIX), the domain path
       |  - path
       |edges:
       |  - direction: in
-      |    # The controlling process or thread ID
+      |    # The process or thread ID
       |    label: pid
       |    node:
       |      name: Process
@@ -63,36 +61,17 @@ object ProcessSocket extends Yaml {
       |      name: Protocol
       |      value: protocol
       |  - direction: out
-      |    label: local_port
+      |    label: port
       |    node:
       |      name: Port
-      |      value: local_port
-      |  - direction: out
-      |    label: remote_port
-      |    node:
-      |      name: Port
-      |      value: remote_port
+      |      value: port
       |  - direction: out
       |    # The network protocol = IPv4, IPv6
-      |    label: local_address, family
+      |    label: address, family
       |    node:
       |      name: IP_Address
-      |      value: local_address, family
-      |  - direction: out
-      |    # The network protocol = IPv4, IPv6
-      |    label: remote_address, family
-      |    node:
-      |      name: IP_Address
-      |      value: remote_address, family
-      |
+      |      value: address, family
+      |      |
       |""".stripMargin
+
 }
-
-/*
-+--------------------+--------------+-------+-------+
-|           tableName|       colName|colType| osName|
-+--------------------+--------------+-------+-------+
-|process_open_sockets|            fd|   long|windows|
-+--------------------+--------------+-------+-------+
-
- */
