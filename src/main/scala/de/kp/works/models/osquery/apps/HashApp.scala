@@ -30,8 +30,6 @@ import com.google.gson.JsonObject
  *
  * The result contributes to the `hash` (sub) graph
  * model of the Osquery Graph.
- *
- * OPEN ISSUE: Modeling the TIME like event (at) time
  */
 object HashApp extends BaseApp {
   /*
@@ -42,23 +40,33 @@ object HashApp extends BaseApp {
    * This methods transforms an Osquery hash entry
    * into the following sub graph
    *
-   * File -- (has_hash) --> Hash (md5, sha1, etc)
+   * Host -- (has_file) --> File -- (has_hash) --> Hash (md5, sha1, etc)
    */
-  def transform(json:JsonObject, hostname:String):(Seq[Vertex], Seq[Edge]) = {
+  def transform(json:JsonObject, hostname:String):Unit = {
 
+    /*
+     * HOST
+     *
+     * The current implementation links the host to the
+     * file that is described by the hash values
+     */
+    val hostId = buildHashValue(Seq("host", hostname))
+    vertices += Vertex(id = hostId, idType = "STRING", label = hostname)
+    /*
+     * HASH VALUES
+     */
     nodes.foreach(node => {
 
       if (json.has(node)) {
 
         val hash = json.get(node).getAsString
+        val hashProps = Map(TYPE -> Seq("STRING", "hash"))
         /*
          * The hash value is expected to be a more or
          * less static information
          */
-        val vertexId = buildHash(Seq(hostname, hash))
-        val vertex = Vertex(id = vertexId, idType = "STRING", label = hash)
-
-        vertices += vertex
+        val hashId = buildHashValue(Seq("hash", hash))
+        vertices += Vertex(id = hashId, idType = "STRING", label = hash, properties = Some(hashProps))
         /*
          * The hash log entry usually also references
          * the assigned file, which is identified via
@@ -72,6 +80,7 @@ object HashApp extends BaseApp {
 
           val path = json.get(PATH).getAsString
           val directory = json.get(DIRECTORY).getAsString
+
           /*
            * The `file` vertex is defined as the head of
            * the edge; its identifier is built from path.
@@ -84,30 +93,25 @@ object HashApp extends BaseApp {
            * (b) other log events like processes refers files
            * via path only
            */
-          val fromId = buildHash(Seq(hostname, path))
-          val toId = hash
-          /*
-           * The respective edge does not contain any
-           * properties and the `label` is predefined
-           */
-          val label = HAS_HASH
+          val fileId = buildHashValue(Seq("file", path))
+          val fileProps = Map(DIRECTORY -> Seq("STRING", directory))
+
+          vertices += fileVertex(id = fileId, label = path, props = Some(fileProps))
           /*
            * The unique identifier of the edge is built
            * from (fromId, toId, label) to avoid creating
            * continuously new edges
+           *
+           * File -- (has_hash) --> Hash
            */
-          val edgeId = buildHash(Seq(hostname, fromId, toId, label))
-          val edge = Edge(
-            id = edgeId,
-            idType = "STRING",
-            label = label,
-            fromId = fromId,
-            fromIdType = "STRING",
-            toId = toId,
-            toIdType = "STRING")
-
-          edges += edge
-
+          edges += buildEdge(fileId, hashId, HAS_HASH)
+          /*
+           * Host -- (has_file) --> File
+           *
+           * The current implementation links the Host
+           * to the File node only.
+           */
+          edges += buildEdge(hostId, fileId, HAS_FILE)
         }
       }
 

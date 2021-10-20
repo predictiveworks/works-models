@@ -25,15 +25,19 @@ import de.kp.works.models.osquery.OsqueryEnums
  * The ConnApp refers to the process_open_sockets
  * table and extracts nodes end edges that refer
  * to the process & connection sub graph model.
- *
- * OPEN ISSUE: Modeling the TIME like event (at) time
- *
- * Should we define a time window where all events
- * refer to? In the sense of a snapshot in time?
  */
 object ConnApp extends BaseApp {
 
-  def transform(json:JsonObject, hostname:String):(Seq[Vertex], Seq[Edge]) = {
+  def transform(json:JsonObject, hostname:String):Unit = {
+
+    /*
+     * HOST
+     *
+     * The current implementation links the host
+     * to the process that holds the connection
+     */
+    val hostId = buildHashValue(Seq("host", hostname))
+    vertices += Vertex(id = hostId, idType = "STRING", label = hostname)
     /*
      * CONNECTION
      *
@@ -42,92 +46,54 @@ object ConnApp extends BaseApp {
      * to the corresponding IP addresses and ports
      */
     val localAddr = json.get(LOCAL_ADDRESS).getAsString
-    val localPort = getValue(json, LOCAL_PORT)
+    val localPort = getLongValue(json, LOCAL_PORT)
 
     val remoteAddr = json.get(REMOTE_ADDRESS).getAsString
-    val remotePort = getValue(json, REMOTE_PORT)
+    val remotePort = getLongValue(json, REMOTE_PORT)
 
     val family = getFamily(json)
     val protocol = getProtocol(json)
 
     val addrProps = Map(
       FAMILY   -> Seq("STRING", family),
-      PROTOCOL -> Seq("STRING", protocol)
+      PROTOCOL -> Seq("STRING", protocol),
+      TYPE     -> Seq("STRING", "ip_address")
     )
-
     /*
      * The unique connection identifier is built without
      * including `family` as this enables to join data
      * with Zeek logs
      */
-    val connId = buildHash(Seq(hostname, protocol, localAddr, remoteAddr, localPort, remotePort))
-    vertices += Vertex(
-      id = connId, idType = "STRING", label = family)
-
+    val connId = buildHashValue(Seq("conn", protocol, localAddr, remoteAddr, localPort, remotePort))
+    vertices += connVertex(connId, family)
     /*
      * IP ADDRESS (local) -- (local_address) --> CONN
      */
-    val localAddrId = buildHash(Seq(hostname, localAddr))
-    vertices += Vertex(
-      id = localAddrId, idType = "STRING", label = localAddr, properties = Some(addrProps))
+    val localAddrId = buildHashValue(Seq("ip_address", localAddr))
 
-    edges += Edge(
-      id = buildHash(Seq(hostname, connId, localAddrId)),
-      idType = "STRING",
-      label = LOCAL_ADDRESS,
-      fromId = localAddrId,
-      fromIdType = "STRING",
-      toId = connId,
-      toIdType = "STRING")
-
+    vertices += addressVertex(localAddrId, localAddr, Some(addrProps))
+    edges += buildEdge(connId, localAddrId, LOCAL_ADDRESS)
     /*
      * IP ADDRESS (remote) <-- (remote_address) -- CONN
      */
-    val remoteAddrId = buildHash(Seq(hostname, remoteAddr))
-    vertices += Vertex(
-      id = remoteAddrId, idType = "STRING", label = remoteAddr, properties = Some(addrProps))
+    val remoteAddrId = buildHashValue(Seq("ip_address", remoteAddr))
 
-    edges += Edge(
-      id = buildHash(Seq(hostname, connId, remoteAddrId)),
-      idType = "STRING",
-      label = REMOTE_ADDRESS,
-      fromId = connId,
-      fromIdType = "STRING",
-      toId = remoteAddrId,
-      toIdType = "STRING")
-
+    vertices += addressVertex(remoteAddrId, remoteAddr, Some(addrProps))
+    edges += buildEdge(connId, remoteAddrId, REMOTE_ADDRESS)
     /*
      * PORT (local) -- (local_port) --> CONN
      */
-    val localPortId = buildHash(Seq(hostname, localPort))
-    vertices += Vertex(
-      id = localPortId, idType = "STRING", label = localPort)
+    val localPortId = buildHashValue(Seq("port", localPort))
 
-    edges += Edge(
-      id = buildHash(Seq(hostname, connId, localPortId)),
-      idType = "STRING",
-      label = LOCAL_PORT,
-      fromId = localPortId,
-      fromIdType = "STRING",
-      toId = connId,
-      toIdType = "STRING")
-
+    vertices += portVertex(localPortId, localPort)
+    edges += buildEdge(connId, localPortId, LOCAL_PORT)
     /*
      * PORT (remote) <-- (remote_address) -- CONN
      */
-    val remotePortId = buildHash(Seq(hostname, remotePort))
-    vertices += Vertex(
-      id = remotePortId, idType = "STRING", label = remotePort)
+    val remotePortId = buildHashValue(Seq("port", remotePort))
 
-    edges += Edge(
-      id = buildHash(Seq(hostname, connId, remotePortId)),
-      idType = "STRING",
-      label = REMOTE_PORT,
-      fromId = connId,
-      fromIdType = "STRING",
-      toId = remotePortId,
-      toIdType = "STRING")
-
+    vertices += portVertex(remotePortId, remotePort)
+    edges += buildEdge(connId, remotePortId, REMOTE_PORT)
     /*
      * PROCESS -- (has_conn) --> CONN
      *
@@ -135,21 +101,15 @@ object ConnApp extends BaseApp {
      * running processes, and the process reference is
      * extracted as vertex
      */
-    val pid = getValue(json, PID)
+    val pid = getLongValue(json, PID)
+    val processId = buildHashValue(Seq("process", pid))
 
-    val processId = buildHash(Seq(hostname, pid))
-    vertices += Vertex(
-      id = processId, idType = "STRING", label = pid)
-
-    edges += Edge(
-      id = buildHash(Seq(hostname, processId, connId)),
-      idType = "STRING",
-      label = HAS_CONN,
-      fromId = processId,
-      fromIdType = "STRING",
-      toId = connId,
-      toIdType = "STRING")
-
+    vertices += processVertex(processId, pid)
+    edges += buildEdge(processId, connId, HAS_CONN)
+    /*
+     * Host -- (has_process) --> Process
+     */
+    edges += buildEdge(hostId, processId, HAS_PROCESS)
     /*
      * SOCKET <-- (uses_socket) -- PROCESS
      *
@@ -160,38 +120,23 @@ object ConnApp extends BaseApp {
      * A socket is modeled as a vertex and also contains
      * `path` and `state` field.
      */
-    val fd = getValue(json, FD)
-    val socket = getValue(json, SOCKET)
+    val fd = getLongValue(json, FD)
+    val socket = getLongValue(json, SOCKET)
 
     val path = json.get(PATH).getAsString
     val state = json.get(STATE).getAsString
 
     val socketProps = Map(
-      FD    -> Seq("LONG", fd),
+      FD    -> Seq("LONG",   fd),
       PATH  -> Seq("STRING", path),
       STATE -> Seq("STRING", state)
     )
 
-    val socketId = buildHash(Seq(hostname, fd, socket))
-    vertices += Vertex(
-      id = socketId, idType = "STRING", label = fd, properties = Some(socketProps))
+    val socketId = buildHashValue(Seq("socket", fd, socket))
 
-    edges += Edge(
-      id = buildHash(Seq(hostname, processId, socketId)),
-      idType = "STRING",
-      label = HAS_SOCKET,
-      fromId = processId,
-      fromIdType = "STRING",
-      toId = socketId,
-      toIdType = "STRING")
+    vertices += socketVertex(socketId, fd, Some(socketProps))
+    edges += buildEdge(processId, socketId, HAS_SOCKET)
 
-    (vertices, edges)
-
-  }
-
-  private def getValue(json:JsonObject, name:String):String = {
-    val value = json.get(name).getAsJsonPrimitive
-    if (value.isNumber) value.getAsLong.toString else value.getAsString
   }
 
   private def getFamily(json:JsonObject):String = {
